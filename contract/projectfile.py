@@ -39,7 +39,32 @@ class Tijori_pro_c(sp.Contract):
                    (_balance = self.data.funded - params.amount))))
     
     
-    
+     @sp.add_test(name = "Project contract")
+    def test():
+
+        scenario = sp.test_scenario()
+        scenario.h1("Project contract")
+
+
+        admin = sp.test_account("Administrator")
+        alice = sp.test_account("Alice")
+        bob   = sp.test_account("Robert")
+        john  = sp.test_account("John")
+        mike = sp.test_account("Mike") 
+        
+        #Initialize contracts
+        proC = Tijori_pro_c(admin.address)
+        scenario.h1("Project Contract")
+        
+        #perform setowner
+        scenario.h2("Set owner")
+        scenario += proC.setowner(owner = ownerC.address).run(sender=admin)
+        
+        
+        scenario.h2("set revoke")
+        scenario += proC.setRevoke(revoke = False).run(sender=admin)
+        
+        
     
     
     
