@@ -6,11 +6,11 @@ class Tijori_pro_c(sp.Contract):
         self.init(
             product=sp.none,
             owner=sp.none,
-            admin=_admin,
+            admin=admin,
             reqfunds=sp.none,
             funded=sp.none,
             address=sp.none,
-            link=sp.nonw,
+            link=sp.none,
             comm=sp.none,
             revoke= False,
             balance=sp.none,
@@ -26,7 +26,7 @@ class Tijori_pro_c(sp.Contract):
     @sp.entry_point
     def setRevoke(self,params):
         sp.set_type(params, sp.TBool)
-        sp.verify(sp.seder==self.data.admin)
+        sp.verify(sp.sender==self.data.admin)
         self.data.revoke=params
         
     @sp.entry_point
@@ -35,11 +35,11 @@ class Tijori_pro_c(sp.Contract):
         sp.verify((sp.sender == self.data.admin) |
             (~self.data.revoke &
                    ((params.amount<= self.data.funded) |
-                   (sp.send(to_,amount))
+                   (sp.send(sp.TAddress,amount))
                    (_balance = self.data.funded - params.amount))))
     
     
-     @sp.add_test(name = "Project contract")
+    @sp.add_test(name = "Project contract")
     def test():
 
         scenario = sp.test_scenario()
@@ -63,17 +63,3 @@ class Tijori_pro_c(sp.Contract):
         
         scenario.h2("set revoke")
         scenario += proC.setRevoke(revoke = False).run(sender=admin)
-        
-        
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-                        
