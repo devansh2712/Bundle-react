@@ -58,8 +58,8 @@ class Tijori_pro_c(sp.Contract):
         #amount= sp.tez(10)
         #sp.set_type(params, sp.TRecord(from_=sp.TAddress, to_ =sp.TAddress, value=sp.TMutez).layout(("from_ as from", ("to_ as to", "value"))))
         amount = sp.local('amount', sp.amount)
-        sp.verify((sp.sender == self.data.adminAddress) |
-            (self.data.revoke==True ))
+        sp.verify((sp.sender == self.data.owner) &
+            (self.data.revoke==True )&( self.data.amount<=self.data.balance))
         sp.send(address, amount.value)
         balance = self.data.funded - amount.value
     @sp.add_test(name = "Project contract")
