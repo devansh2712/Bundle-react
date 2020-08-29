@@ -1,0 +1,136 @@
+import smartpy as sp
+class DAOContract(sp.Contract):
+    def _init_(self,admin):
+        self.init (
+            adminAddress=admin,
+            tokencontract = sp.none,
+            totalmembers = sp.none,
+            allocprop = sp.big_map(tkey = sp.TNat, 
+                                            tvalue = 
+                                                sp.TRecord(
+                                                    creator = sp.TAddress,
+                                                    amount  = sp.TNat,
+                                                    votesfor   = sp.TNat,
+                                                    votesagainst = sp.TNat,
+                                                    voteCount = sp.TNat,
+                                                    expiry  = sp.TTimestamp,
+                                                    accepted = sp.TBool,
+                                                    diff = sp.TInt
+                                                    
+                                                )
+                                    ),
+            membermap = sp.big_map(tkey = sp.TAddress,
+                            tvalue = sp.TBool),                                
+            addmemberdata = sp.big_map(tkey = sp.TNat,
+                                   tvalue = sp.record(
+                                       address = sp.TAddress,
+                                       balance = sp.TNat,
+                                       status = sp.TBool
+                                       )
+                                    ),
+            addmemberdataid = sp.nat(0),
+            membermapid = sp.nat(0),
+            membercount = sp.nat(0),
+            allocpropid = sp.nat(0),
+            projectdata = sp.big_map(tkey = sp.TAddress,
+                                    tvalue = sp.TRecord(
+                                funded = sp.TBool,
+                                votesfor   = sp.TNat,
+                                votesagainst = sp.TNat,
+                                voteCount = sp.TNat,
+                                expiry  = sp.TTimestamp,
+                                diff = sp.TInt)
+                                )
+            
+        )
+    def intialize (self, params):
+        
+        sp.verify(sp.sender == self.data.admin)
+        sp.verify(~self.data.tokencontract.is_some())
+        self.data.tokencontract = params.token
+        
+        tokenDAO = sp.contract(sp.TRecord(address = sp.TAddress, value = sp.TNat),
+                            self.data.tokencontract, entry_point = "mint").open_some()
+        
+        sp.transfer(sp.record(address = tokencontract, value = 100), sp.tez(0), tokenDAO)                    
+    
+    def addMembers(self,params):
+        sp.verify(sp.sender == self.data.admin)
+        sp.verify(self.data.membercount <= totalmembers)
+        memberaddress = self.data.addmemberdata[params.id].address
+        fa = sp.contract(sp.TRecord(address = sp.TAddress, value = sp.TNat),
+                            self.data.tokencontract, entry_point = "mint").open_some()
+        sp.transfer(sp.record(address = memberaddress, value = 100), sp.tez(0), fa)
+        self.data.membermap[params.id] = True
+        self.data.membercount+=1
+            
+            
+            
+    def addrequest(self, params):
+        sp.set_type(params, sp.TAddress)
+        addmemberdata[self.data.addmemberdataid] = params.address
+        self.data.addmemberdataid += 1
+    
+    
+    """utility function to calculate cost of voting"""
+    def squareRoot(self, x):
+       sp.verify(x >= 0)
+       y = sp.local('y', x)
+       sp.while y.value * y.value > x:
+           y.value = (x // y.value + y.value) // 2
+       sp.verify((y.value * y.value <= x) & (x < (y.value + 1) * (y.value + 1)))
+       self.data.value = y.value
+       
+
+    def allocationrequest(self,params):
+        sp.verify(self.data.membermap[sp.sender] == True)
+        self.data.allocprop[self.data.allocpropid] = sp.record(
+            
+                                                    creator = params.address,
+                                                    amount  = params.amt,
+                                                    votesfor   = sp.nat(0),
+                                                    voteagainst = sp.nat(0),
+                                                    voteCount = sp.nat(0),
+                                                    expiry  = sp.TTimestamp,
+                                                    accepted = sp.TBool,
+                                                    diff = sp.nat(0)
+                                                    )
+                                                    
+        self.data.allocpropid += 1
+    
+    
+    def vote(self, params):
+        sp.verify(self.data.membermap[sp.sender] == True)
+        propvote = self.data.allocprop[params.id]
+        sp.verify(propvote.expiry > sp.now)
+        sp.if params.infavor == True:
+            propvote.votesfor += params.value
+            
+            propvote.voteCount +=params.value
+        sp.if params.infavor == False:
+            propvote.voteagainst += params.value
+            propvote.voteCount +=params.value
+        
+        propvote.diff = propvote.votesfor - prop.voteagainst
+        
+    """def finaliseround(self,params):
+        sp.verify(self.data.membermap[sp.sender] == True)
+        sp.for x in self.data.allocpropid:
+            k = sp.local()"""
+            
+    
+    
+    @sp.add_test(name = "DAO contract")
+    def test():
+        scenario = sp.test_scenario()
+        scenario.h1("DAO contract")
+        admin = sp.test_account("Administrator")
+        alice = sp.test_account("Alice")
+        bob   = sp.test_account("Robert")
+        john  = sp.test_account("John")
+        mike = sp.test_account("Mike")
+        #Initialize contracts
+        daoC = DAOContract(_admin=admin.address)
+        
+    
+            
