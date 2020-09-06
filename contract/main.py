@@ -152,6 +152,7 @@ class DAO(sp.Contract):
                 tkey = sp.TInt, 
                 tvalue = sp.TRecord(
                     roundno= sp.TNat,
+                    serialno=sp.TInt,
                     proadd=sp.TAddress,
                     vote = sp.TInt
                 )
@@ -204,7 +205,7 @@ class DAO(sp.Contract):
         pd_index = self.data.product_id
         
         sp.if ~self.data.addprojectdata.contains(pd_index):
-            self.data.addprojectdata[pd_index] = sp.record(roundno = 0, vote = 0,proadd=sp.sender)
+            self.data.addprojectdata[pd_index] = sp.record(roundno = 0,serialno=pd_index,vote = 0,proadd=sp.sender)
             
             
     '''def addproposal(self,st,et):
@@ -234,8 +235,9 @@ class DAO(sp.Contract):
         self.data.maxvotecount=self.data.addprojectdata[1].vote
         sp.for x in sp.range(1,r,1):
             sp.if (self.data.addprojectdata[x].vote>self.data.maxvotecount):
+                self.data.maxvoteid=self.data.addprojectdata[x].serialno
                 self.data.maxvotecount=self.data.addprojectdata[x].vote
-                self.data.maxvoteid=x
+                
         
             
 @sp.add_test(name="Test_contract")
@@ -303,3 +305,6 @@ def testContract():
     scenario.h2("show voting result")
     scenario+=daoc.voteresult().run(sender=devansh)
     scenario.h3("voating results calculated")
+    #scenario.h2("add proposal data")
+    #scenario+=daoc.addproposal(st=sp.timestamp(100000),et=sp.timestamp(110000))
+    #scenario.h3("add propoasl sucsesful")
