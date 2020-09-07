@@ -23,12 +23,18 @@ function App() {
         <Switch>
         
           <Route path="/" exact component={() => <Home />} />
-          <Route path="/Projects" exact component={() => <Projects />} />
+          <Route path="/Project" exact component={() => <Projects />} />
           <Route path="/DAO" exact component={() => <DAO />} />
 
           <Route 
             exact
             path="/DAO/:id"
+            component={ReactPage}
+          />
+
+          <Route 
+            exact
+            path="/Project/:id"
             component={ReactPage}
           />
 
