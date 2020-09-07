@@ -19,7 +19,8 @@ function Home() {
           <div className="col-md-8">
             
 
-              <Carousel>
+            <div className="pt-5 mt-5">
+            <Carousel>
                 <Carousel.Item>
                   <img
                     className="d-block w-100"
@@ -39,8 +40,10 @@ function Home() {
                   />
 
                   <Carousel.Caption>
+                    <div className="pt-5 pl-5">
                     <h3 className="text-dark">Second slide label</h3>
                     <p className="text-dark">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                    </div>
                   </Carousel.Caption>
                 </Carousel.Item>
                 <Carousel.Item>
@@ -56,6 +59,7 @@ function Home() {
                   </Carousel.Caption>
                 </Carousel.Item>
               </Carousel>
+            </div> 
 
 
           </div>
