@@ -24,6 +24,13 @@ function App() {
           <Route path="/" exact component={() => <Home />} />
           <Route path="/Projects" exact component={() => <Projects />} />
           <Route path="/DAO" exact component={() => <DAO />} />
+
+          <Route 
+            exact
+            path="/DAO/:id"
+            component={ReactPage}
+          />
+
           <Route path="/ProjectPage" exact component={() => <ProjectPage />} />
           <Route path="/ReactPage" exact component={() => <ReactPage />} />
 
