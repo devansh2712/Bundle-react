@@ -13,6 +13,7 @@
 import React from "react";
 import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 import { Navigation, Footer, Home, About, DAO, Projects, ProjectProfile, DaoCards, ProjectPage, ReactPage} from "./components";
+import AboutPage from "./components/AboutPage"
 
 function App() {
   return (
@@ -30,6 +31,8 @@ function App() {
             path="/DAO/:id"
             component={ReactPage}
           />
+
+          <Route path="/about" exact component ={() => <AboutPage /> } />
 
           <Route path="/ProjectPage" exact component={() => <ProjectPage />} />
           <Route path="/ReactPage" exact component={() => <ReactPage />} />
