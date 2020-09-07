@@ -38,7 +38,7 @@ const Projects  = () => {
   </Row>  
 
                 <div className="row pl-5 ml-5 text-center">
-                  <h1 class="font-weight-light ">A List of all Projects's Open for Intake</h1>
+                  <h1 class="font-weight-light ">A List of all Projects Open for Intake</h1>
                 </div>
                 <div className="row pt-5">          
                     <div className="col-md-2 col-sm-6">

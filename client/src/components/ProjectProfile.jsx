@@ -13,7 +13,7 @@ import { sampleData } from '../data/sampleData';
 
 
 
-const ReactPage = (props) => {
+const ProjectProfile = (props) => {
 
   const {id} = useParams();
 
@@ -77,4 +77,4 @@ const ReactPage = (props) => {
   );
 }
 
-export default ReactPage;
+export default ProjectProfile;
