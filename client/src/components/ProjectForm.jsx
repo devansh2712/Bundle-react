@@ -1,20 +1,35 @@
-import React from 'react'
+import React, {useState} from "react";
 import Form from 'react-bootstrap/Form'
 import Button from 'react-bootstrap/Button'
 import Card from 'react-bootstrap/Card'
 
 const ProjectForm = () => {
+
     
     const all = require("it-all");
     const [adddata, setadddata] = useState("");
     const [addinfo, setaddinfo] = useState("");
 
 const ipfsclient = require("ipfs-http-client");
-  const ipfs = ipfsclient({
-    host: "ipfs-infura-io",
-    port: 5001,
-    protocol: "https"
-  });
+const ipfs = ipfsclient({ host: 'ipfs.infura-ipfs.io', port: 5001, protocol: 'https' })
+  const handleChange = async (event) => {
+    setadddata(event.target.value)
+}
+const addProjectipfs = (event) => {
+    event.preventDefault()
+    console.log("Submitting file to ipfs...")
+    const data = JSON.stringify({
+        name: adddata,
+    link0: "",
+    link1: "",
+    link2: ""
+    })
+    const ipfsHash = ipfs.add(data)
+    //const arr = all(ipfsHash)
+    console.log(ipfsHash)
+    
+        
+    }
 
     return (
         <React.Fragment>
@@ -48,7 +63,11 @@ const ipfsclient = require("ipfs-http-client");
                 <Form>
                     <Form.Group controlId="projectname">
                         <Form.Label>Project Name:</Form.Label>
-                        <Form.Control type="projectname" placeholder="Enter Project name" />
+                        <Form.Control type="projectname" 
+                        placeholder="Enter Project name" 
+                        value = {adddata}
+                        onChange = {(event)=>handleChange(event)} 
+                        />
                         <Form.Text className="text-muted">
                         </Form.Text>
                     </Form.Group>
@@ -81,8 +100,8 @@ const ipfsclient = require("ipfs-http-client");
                     <br />
 
 <center>
-                    <Button variant="primary" type="createdao">
-                        Submit 
+                    <Button type="submit" className="mb-2" onClick={addProjectipfs}>  
+                    Submit
                     </Button>
                     </center>
                 </Form>

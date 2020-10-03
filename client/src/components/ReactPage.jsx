@@ -81,7 +81,8 @@ const addmember = async () => {
                     <br/>
                     <h5 className="font-weight-light">
                       Minimum contribution to be added is - 20 mutez
-
+                      Invesments - Diversified
+                    
                     </h5>
                     <br/>
                     <br/>
