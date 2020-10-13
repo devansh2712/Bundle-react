@@ -455,5 +455,5 @@ if "templates" not in __name__:
         scenario.h2("Regain Tezos")
         scenario+=tijoric.regaintez(1).run(sender=komal)
         scenario.h2("gaintoken")
-        # scenario+=tijoric.gaintoken(1).run(sender=komal,valid=False)
-        # scenario.h3("regain tezos successful")
+        scenario+=tijoric.gaintoken(1).run(sender=komal,valid=False)
+        scenario.h3("regain tezos successful")
