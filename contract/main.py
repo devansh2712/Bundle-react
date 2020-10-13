@@ -41,7 +41,6 @@ class DAO_Token(sp.Contract):
     @sp.entry_point
     def mint(self, params):
         sp.set_type(params, sp.TRecord(address = sp.TAddress, value = sp.TNat))
-        sp.verify(sp.sender == self.data.administrator)
         self.addAddressIfNecessary(params.address)
         self.data.balances[params.address].balance += params.value
         self.data.totalSupply += params.value
@@ -76,9 +75,7 @@ class DAO_Token(sp.Contract):
         sp.set_type(params, sp.TUnit)
         sp.result(self.data.administrator)
         
-    
-    
-
+        
 class Project_token(sp.Contract):
     def __init__(self, admin):
         self.init(paused = False, balances = sp.big_map(tvalue = sp.TRecord(approvals = sp.TMap(sp.TAddress, sp.TNat), balance = sp.TNat)), administrator = admin, totalSupply = 0)
@@ -120,7 +117,6 @@ class Project_token(sp.Contract):
     @sp.entry_point
     def mint(self, params):
         sp.set_type(params, sp.TRecord(address = sp.TAddress, value = sp.TNat))
-        sp.verify(sp.sender == self.data.administrator)
         self.addAddressIfNecessary(params.address)
         self.data.balances[params.address].balance += params.value
         self.data.totalSupply += params.value
@@ -153,214 +149,311 @@ class Project_token(sp.Contract):
     @sp.view(sp.TAddress)
     def getAdministrator(self, params):
         sp.set_type(params, sp.TUnit)
-        sp.result(self.data.administrator)
+        sp.result(self.data.administrator)        
         
         
-        
-class project(sp.Contract):
-    def __init__(self,own):
+class Tijoricontract(sp.Contract):
+    def __init__(self,tijoriadmin,token):
         self.init(
-            owner=own)
-        
-    @sp.entry_point
-    def spendfunds(self,address, traamount):
-        traamount = sp.local('amount', sp.amount)
-        sp.verify(traamount.value<=sp.balance)
-        sp.send(address, traamount.value)
-        
-        
-        
-class DAO(sp.Contract):
-    def __init__(self,admin,strength,min_contribution):
-        self.init(
-            admin=admin,
-            strength=strength,
-            dispute=0,
-            product_id =0,
-            proposal_id=0,
-            min_contribution=min_contribution,
+            admin=tijoriadmin,
             daotoken=sp.none,
-            projecttoken=sp.none,
-            addmemberdata = sp.big_map(tkey = sp.TAddress,
-                			        tvalue = sp.TRecord(
-                       				contribution = sp.TInt,
-                       				balance = sp.TInt
-									                    )
-		    						),
-			addprojectdata = sp.big_map( 
+            projecttoken=token,
+            DAO_id=0,
+            project_id=0,
+            proposal_id=0,
+            addDAOdata = sp.big_map( 
                 tkey = sp.TInt, 
                 tvalue = sp.TRecord(
                     serialno=sp.TInt,
-                    proadd=sp.TAddress,
-                    vote = sp.TInt
+                    admin=sp.TAddress,
+                    strength= sp.TInt,
+                    maxtoken=sp.TInt,
+                    min_contribution=sp.TMutez,
+                    winproposalid=sp.TInt,
+                    winprojectid=sp.TInt,
+                    maxmember=sp.TNat,
+                    currentcount=sp.TInt,
+                    disputevotecount=sp.TNat,
+                    proposedproposalid=sp.TInt,
+                    proposedprojectid=sp.TInt,
+                    disputestatus=sp.TInt,
+                    votestart=sp.TTimestamp,
+                    voteend=sp.TTimestamp,
+                    disputeend=sp.TTimestamp,
+                    rewardstatus=sp.TInt,
+                    contri= sp.TNat
+                    
                 )
             ),
-            addpropoasldata = sp.big_map( 
+            addmemberdata = sp.big_map( 
+                tkey = sp.TAddress, 
+                tvalue = sp.TRecord(
+                    tokenbalance=sp.TInt,
+                    contribution=sp.TMutez,
+                    DAO= sp.TInt
+                )
+            ),
+            addprojectdata = sp.big_map( 
+                tkey = sp.TInt, 
+                tvalue = sp.TRecord(
+                    serialno=sp.TInt,
+                    proowner=sp.TAddress,
+                    vote = sp.TInt,
+                    DAO = sp.TInt,
+                    cat=sp.TInt
+                )
+            ),
+            addpropoasldata = sp.big_map(
                 tkey = sp.TInt, 
                 tvalue = sp.TRecord(
                     proposer=sp.TAddress,
-                    fund=sp.TMutez,
+                    cat=sp.TInt,
                     serialno=sp.TInt,
-                    vote = sp.TInt
+                    vote = sp.TInt,
+                    DAO = sp.TInt
                 )
             )
             )
-    
-
+            
+   
         
         
     @sp.entry_point
-    def set_daotoken(self,Token):
-        sp.set_type(Token, sp.TAddress)
-        sp.verify(sp.sender == self.data.admin)
-        sp.verify(~self.data.daotoken.is_some())
-        self.data.daotoken = sp.some(Token)
-    @sp.entry_point
-    def set_projecttoken(self,Token):
-        sp.set_type(Token, sp.TAddress)
-        sp.verify(sp.sender == self.data.admin)
-        sp.verify(~self.data.projecttoken.is_some())
-        self.data.projecttoken = sp.some(Token)
+    def addDAO(self,stre,mincontribution,mtoken,vstart,vend,disend,cont):
+        
+        sp.set_type(mincontribution, sp.TMutez)
+        mincontribution=mincontribution
+        sp.verify(sp.now<disend)
+        sp.if self.data.addmemberdata.contains(sp.sender)==False:
+            self.data.DAO_id +=1
+            keyindex=self.data.DAO_id
+            sp.verify(sp.amount == mincontribution)
+            self.data.addDAOdata[keyindex] = sp.record(admin=sp.sender,strength=stre,min_contribution=mincontribution,serialno=keyindex,winproposalid=-1,winprojectid=-1,maxtoken=mtoken,proposedproposalid=-1,proposedprojectid=-1,disputevotecount=0,maxmember=1,disputestatus=0,rewardstatus=0,votestart=vstart,voteend=vend,disputeend=disend,currentcount=1,contri=cont)
+            self.data.addmemberdata[sp.sender]=sp.record(DAO=keyindex,contribution=sp.amount,tokenbalance=mtoken)
         
     @sp.entry_point
-    def addmember(self,contribution):
-        #restrict karna hai member count se
-        sp.set_type(contribution, sp.TInt)
-        contribution = contribution
-        sp.verify(contribution >= self.data.min_contribution)
+    def addMember(self,dao):
+        cstr=self.data.addDAOdata[dao].currentcount
+        mstr=self.data.addDAOdata[dao].strength
+        disend=self.data.addDAOdata[dao].disputeend
         mem_address = sp.sender
-        
-        sp.if ~self.data.addmemberdata.contains(mem_address):
-            self.data.addmemberdata[mem_address]=sp.record(contribution=contribution,balance=contribution)
-            tokenContract = sp.contract(sp.TRecord(address = sp.TAddress, tokbal = sp.TNat),
-                                    self.data.daotoken.open_some(),
-                                    "mint").open_some()
-            #sp.transfer(sp.record(address = sp.sender, value =contribution ),
-                    # sp.tez(0),
-                    # tokenContract)
-    @sp.entry_point
-    def addproduct(self):
-        
-        self.data.product_id += 1
-        pd_index = self.data.product_id
-        
-        sp.if ~self.data.addprojectdata.contains(pd_index):
-            self.data.addprojectdata[pd_index] = sp.record(serialno=pd_index,vote = 0,proadd=sp.sender) 
+        sp.verify(cstr<=mstr)
+        sp.verify(sp.now<disend)
+        sp.if self.data.addmemberdata.contains(mem_address)==False:
+            sp.if self.data.addDAOdata.contains(dao):
+                sp.verify(sp.amount == self.data.addDAOdata[dao].min_contribution)
+                self.data.addmemberdata[mem_address]=sp.record(DAO=dao,contribution=sp.amount,tokenbalance=self.data.addDAOdata[dao].maxtoken)
+                self.data.addDAOdata[dao].maxmember+=1
+                self.data.addDAOdata[dao].currentcount+=1
     
     @sp.entry_point
-    def addproposal(self,funding):
-        funding = sp.local('amount', sp.amount)
-        self.data.proposal_id += 1
-        ps_index = self.data.proposal_id
+    def addProject(self,dao,adminaddress):
+        sp.set_type(adminaddress, sp.TAddress)
+        adminaddress=adminaddress
+        sp.if self.data.addDAOdata.contains(dao):
+            self.data.project_id +=1
+            keyindex=self.data.project_id
+            self.data.addprojectdata[keyindex] = sp.record(proowner=adminaddress,DAO=dao,serialno=keyindex,vote=0,cat=-1)
         
-        sp.if ~self.data.addprojectdata.contains(ps_index):
-            self.data.addpropoasldata[ps_index] = sp.record(serialno=ps_index,vote = 0,proposer=sp.sender,fund=funding.value)
-    
+            
+        
     @sp.entry_point
-    def voteproject(self,proindex,value):
-        
-        sp.if self.data.addprojectdata.contains(proindex):
-            sp.if self.data.addmemberdata.contains(sp.sender):
-                self.data.addprojectdata[proindex].vote+=value
-                self.data.addmemberdata[sp.sender].balance-=value
+    def addProposal(self,dao,fundingamt):
+        mem_address = sp.sender
+        sp.set_type(fundingamt, sp.TMutez)
+        fundingamt=fundingamt
+        sp.if self.data.addDAOdata.contains(dao):
+            sp.if self.data.addmemberdata.contains(mem_address):
+                self.data.proposal_id+=1
+                keyindex=self.data.proposal_id
+                self.data.addpropoasldata[keyindex]=sp.record(proposer=mem_address,cat=-1,serialno=keyindex,vote=0,DAO=dao)
+                
+                
+    @sp.entry_point
+    def voteproject(self,castedvotes,projectid):
+        did=self.data.addprojectdata[projectid].DAO
+        vstart=self.data.addDAOdata[did].votestart
+        vend=self.data.addDAOdata[did].voteend
+        mem_address = sp.sender
+        sp.verify(sp.now>vstart)
+        sp.verify(sp.now<vend)
+        sp.if self.data.addmemberdata.contains(mem_address):
+            sp.verify(self.data.addmemberdata[mem_address].DAO== self.data.addprojectdata[projectid].DAO)
+            burntokens=castedvotes*castedvotes
+            sp.verify(burntokens <= self.data.addmemberdata[mem_address].tokenbalance)
+            self.data.addprojectdata[projectid].vote+=castedvotes
+            self.data.addmemberdata[mem_address].tokenbalance-=burntokens
+            
+            
             
     @sp.entry_point
-    def voteproposal(self,proindex,value):
+    def voteproposal(self,castedvotes,proposalid):
+        did=self.data.addpropoasldata[proposalid].DAO
+        vstart=self.data.addDAOdata[did].votestart
+        vend=self.data.addDAOdata[did].voteend
+        mem_address = sp.sender
+        sp.verify(sp.now>vstart)
+        sp.verify(sp.now<vend)
+        sp.if self.data.addmemberdata.contains(mem_address):
+            sp.verify(self.data.addmemberdata[mem_address].DAO== self.data.addpropoasldata[proposalid].DAO)
+            burntokens=castedvotes*castedvotes
+            sp.verify(burntokens <= self.data.addmemberdata[mem_address].tokenbalance)
+            self.data.addpropoasldata[proposalid].vote+=castedvotes
+            self.data.addmemberdata[mem_address].tokenbalance-=burntokens    
+            
+            
+            
+    
+    @sp.entry_point
+    def proposeresult(self,projectid,proposalid):
+        mem_address=sp.sender
+        daoid=self.data.addprojectdata[projectid].DAO
+        sp.if self.data.addmemberdata.contains(mem_address):
+           sp.verify(mem_address== self.data.addDAOdata[daoid].admin)
+           sp.verify(self.data.addprojectdata[projectid].DAO== self.data.addpropoasldata[proposalid].DAO)
+           self.data.addDAOdata[daoid].proposedprojectid=projectid
+           self.data.addDAOdata[daoid].proposedproposalid=proposalid
+           
+           
+           
+    @sp.entry_point
+    def disputeresult(self,dao,vote):
+        vend=self.data.addDAOdata[dao].voteend
+        disend=self.data.addDAOdata[dao].disputeend
+        sp.verify(sp.now>vend)
+        sp.verify(sp.now<disend)
+        mem_address=sp.sender
+        sp.if self.data.addmemberdata.contains(mem_address):
+            self.data.addDAOdata[dao].disputevotecount+=vote
+           
+    
+    @sp.entry_point
+    def finaliseresult(self,projectid,proposalid):
+        mem_address=sp.sender
+        daoid=self.data.addprojectdata[projectid].DAO
+        sp.if self.data.addmemberdata.contains(mem_address):
+           sp.verify(mem_address== self.data.addDAOdata[daoid].admin)
+           sp.verify(self.data.addprojectdata[projectid].DAO== self.data.addpropoasldata[proposalid].DAO)
+           sp.verify(self.data.addDAOdata[daoid].disputevotecount<=(self.data.addDAOdata[daoid].maxmember)//2)
+           self.data.addDAOdata[daoid].winprojectid=self.data.addDAOdata[daoid].proposedprojectid
+           self.data.addDAOdata[daoid].winproposalid=self.data.addDAOdata[daoid].proposedproposalid
+           self.data.addDAOdata[daoid].disputestatus=1
         
-        sp.if self.data.addpropoasldata.contains(proindex):
-            sp.if self.data.addmemberdata.contains(sp.sender):
-                self.data.addpropoasldata[proindex].vote+=value
-                self.data.addmemberdata[sp.sender].balance-=value
+        
     @sp.entry_point
-    def finalise(self,address, traamount):
-        traamount = sp.local('amount', sp.amount)
-        sp.verify(traamount.value<=sp.balance)
-        sp.verify(self.data.dispute==0)
-        sp.send(address, traamount.value)
+    def rewardfunds(self,daoid):
+        sp.verify(self.data.addDAOdata[daoid].disputestatus==1)
+        x=self.data.addDAOdata[daoid].winprojectid
+        y=self.data.addDAOdata[daoid].winproposalid
+        sendadd=self.data.addprojectdata[x].proowner
+        count=self.data.addDAOdata[daoid].maxmember
+        contribution=self.data.addDAOdata[daoid].min_contribution
+        sp.for x in sp.range(0,count):
+            sendfunds=contribution+contribution
+        sp.send(sendadd,sendfunds)
+        self.data.addDAOdata[daoid].rewardstatus=1
+        
+        
     @sp.entry_point
-    def dispute(self, value):
-        self.data.dispute=value
+    def regaintez(self,daoid):
+        mem_address=sp.sender
+        sp.verify(self.data.addDAOdata[daoid].disputestatus==0)
+        sp.verify(self.data.addmemberdata[mem_address].DAO== daoid)
+        sendfunds=self.data.addmemberdata[mem_address].contribution
+        sp.send(mem_address,sendfunds)
+        del self.data.addmemberdata[mem_address]
+        
+        
+    @sp.entry_point
+    def gaintoken(self,daoid):
+        mem_address=sp.sender
+        sp.verify(self.data.addDAOdata[daoid].disputestatus==1)
+        sp.verify(self.data.addmemberdata[mem_address].DAO== daoid)
+        sp.transfer(
+                sp.record(
+                    address= sp.sender,
+                    value = self.data.addDAOdata[daoid].contri
+                ), 
+                sp.tez(0),
+                sp.contract(
+                    sp.TRecord(
+                      address= sp.TAddress,
+                      value = sp.TNat
+                    ), 
+                    self.data.projecttoken, 
+                    "mint"
+                ).open_some()
+            )
+        del self.data.addmemberdata[mem_address]
+        
     
-    
+        
+        
 if "templates" not in __name__:
     @sp.add_test(name="Test_contract")
     def contracttesting():
         scenario=sp.test_scenario()
         admin = sp.test_account('Administrator')
-        admin = sp.test_account('Administrator')
-        amit = sp.test_account('Amit')  
-        dhruv = sp.test_account('Dhruv')  
-        aryan = sp.test_account('Aryan')  
+        dhruv = sp.test_account('Dhruv')
+        aryan = sp.test_account('Aryan')
         devansh = sp.test_account('Devansh')  
         komal = sp.test_account('Komal')
-        shikhar = sp.test_account('Shikhar')  
-        jaanvi = sp.test_account('Jaanvi')
-        product1 = sp.test_account('product1')
-        product2 = sp.test_account('product2')
-        product3 = sp.test_account('product3')
-        daoc=DAO(admin.address,10,20)
-        proc=project(devansh.address)
-        dtokenc=DAO_Token(admin.address)
+        shikhar = sp.test_account('Shikhar')
+        amit=sp.test_account('Amit')
+        jaanvi=sp.test_account('Jaanvi')
+        swapnanil=sp.test_account('Swapnanil')
+        debashish=sp.test_account('Debashish')
+        project1=sp.test_account('Project1')
+        project2=sp.test_account('Project2')
+        project3=sp.test_account('Project3')
+        project4=sp.test_account('Project4')
+        project5=sp.test_account('Project5')
         ptokenc=Project_token(admin.address)
+        tijoric=Tijoricontract(admin.address,token= ptokenc.address)
         scenario.h1("TIJORI Contract testing")
         scenario.h2("List of test accounts")
-        scenario.show([admin, amit, dhruv,aryan,devansh,komal,shikhar,jaanvi])
+        scenario.show([admin,komal])
         scenario.h2("list of contracts")
-        scenario.h3("FA1.2 token(DAO Token)")
-        scenario.show([dtokenc.address])
-        scenario.h3("DAO contract")
-        scenario.show([daoc.address])
-        scenario.h3("Project contract")
-        scenario.show([proc.address])
-        scenario.h2("Project contract testing")
-        scenario+=proc
-        scenario.h2("Project contract initialized")
-        scenario.h2("Spend funds")
-        scenario+=proc.spendfunds(address=shikhar.address,amount=sp.mutez(200)).run(sender=devansh,amount=sp.tez(1000))
-        scenario.p("Spend funds successful")
-        scenario += daoc
-        scenario.h3("Dao Initialized")
-        scenario.h2('Set DAO token')
-        scenario += daoc.set_daotoken(proc.address).run(sender = admin)
-        scenario.h3("Set  DAO token succesful")
-        scenario.h2('Set DAO token')
-        scenario += daoc.set_projecttoken(proc.address).run(sender = admin)
-        scenario.h3("Set Project token succesful")
-        scenario.h2("Add member")
-        scenario +=daoc.addmember(20).run(sender=dhruv,amount = sp.tez(20))
-        scenario +=daoc.addmember(40).run(sender=jaanvi,amount= sp.tez(40))
-        scenario +=daoc.addmember(15).run(sender=komal,amount= sp.tez(15), valid= False)
-        scenario.h3("Add member succesful ")
+        scenario.h3("Tijori contract")
+        scenario.show([tijoric.address])
+        scenario.h3("FA1.2 token(Project Token)")
+        scenario.show([ptokenc.address])
+        scenario += tijoric
+        scenario.h3("Tijori Initialized")
+        scenario.h2("Add DAO")
+        scenario+=tijoric.addDAO(stre=2,mincontribution=sp.mutez(100),mtoken=100,vstart=sp.timestamp(10000),vend=sp.timestamp(11000),disend=sp.timestamp(13000),cont=100).run(sender=komal,amount=sp.mutez(100))
+        scenario.h3("Add DAO successful")
+        scenario.h2("Add Member")
+        scenario+=tijoric.addMember(1).run(sender=aryan,amount=sp.mutez(10),valid=False)
+        scenario+=tijoric.addMember(1).run(sender=komal,amount=sp.mutez(100))
+        scenario+=tijoric.addMember(1).run(sender=komal,amount=sp.mutez(100))
+        scenario.h3("Add member succesful")
         scenario.h2("Add project")
-        scenario+=daoc.addproduct().run(sender=product1)
-        scenario+=daoc.addproduct().run(sender=product2)
-        scenario+=daoc.addproduct().run(sender=product3)
-        scenario.h3("add project successful")
-        scenario+=daoc.addproposal(funding=sp.mutez(100)).run(sender=devansh)
-        scenario+=daoc.addproposal(funding=sp.mutez(100)).run(sender=komal)
-        scenario+=daoc.addproposal(funding=sp.mutez(100)).run(sender=dhruv)
-        scenario.h3("add propsal successful")
-        scenario.h2(" Proposal voating ")
-        scenario+=daoc.voteproposal(proindex=1,value=5).run(sender=dhruv)
-        scenario+=daoc.voteproposal(proindex=1,value=4).run(sender=amit)
-        scenario+=daoc.voteproposal(proindex=2,value=5).run(sender=devansh)
-        scenario+=daoc.voteproposal(proindex=3,value=6).run(sender=jaanvi)
-        scenario.h3("proposal voating succesful")
-        scenario.h2(" Project voating ")
-        scenario+=daoc.voteproject(proindex=1,value=5).run(sender=dhruv)
-        scenario+=daoc.voteproject(proindex=1,value=4).run(sender=amit)
-        scenario+=daoc.voteproject(proindex=2,value=5).run(sender=devansh)
-        scenario+=daoc.voteproject(proindex=3,value=6).run(sender=jaanvi)
-        scenario.h3("Project voating succesful")
-        scenario.h2("Finalise")
-        scenario+=daoc.finalise(address=product1.address,amount=sp.mutez(200)).run(sender=devansh,amount=sp.tez(1000))
-        scenario.h3("project finalised")
-        scenario.h2("raise dispute")
-        scenario+=daoc.dispute(1).run(sender=dhruv)
-        scenario.h3("raise dispute sucessful")
-        
-        
-        
-        
-        
-        
+        scenario+=tijoric.addProject(dao=1,adminaddress=devansh.address).run(sender=devansh)
+        scenario.h3("Add project successful")
+        scenario.h2("Add proposal")
+        scenario+=tijoric.addProposal(dao=1,fundingamt=sp.mutez(50)).run(sender=komal)
+        scenario.h3('Add proposal sucessful')
+        scenario.h2("Project voting")
+        scenario+=tijoric.voteproject(castedvotes=5,projectid=1).run(sender=komal,now =10500)
+        scenario.h3("Project voting successful")
+        scenario.h2("Proposal voting")
+        scenario+=tijoric.voteproposal(castedvotes=8,proposalid=1).run(sender=komal)
+        scenario.h3("Proposal voting successful")
+        scenario.h2("Propose results")
+        scenario+=tijoric.proposeresult(projectid=1,proposalid=1).run(sender=komal)
+        scenario.h3("Propose result succesful")
+        scenario.h2("dispute results")
+        scenario+=tijoric.disputeresult(dao=1,vote=1).run(sender=komal,now=11500)
+        scenario.h3("dispute resut succesful")
+        scenario.h2("Finalise results")
+        scenario+=tijoric.finaliseresult(projectid=1,proposalid=1).run(sender=komal,valid=False)
+        scenario.h3("Finalise result succesful")
+        scenario.h2("Reward funds")
+        scenario+=tijoric.rewardfunds(1).run(sender=komal,valid=False)
+        scenario.h3("reward funds successful")
+        scenario.h2("Regain Tezos")
+        scenario+=tijoric.regaintez(1).run(sender=komal)
+        scenario.h2("gaintoken")
+        # scenario+=tijoric.gaintoken(1).run(sender=komal,valid=False)
+        # scenario.h3("regain tezos successful")
