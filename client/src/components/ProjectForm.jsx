@@ -96,10 +96,8 @@ const addProjectipfs = (event) => {
                     <Form.Label>Project cover image:</Form.Label>
                         <Form.File id="proimg" label="Upload Project cover image" />
                     </Form.Group>
-
                     <br />
-
-<center>
+        <center>
                     <Button type="submit" className="mb-2" onClick={addProjectipfs}>  
                     Submit
                     </Button>
