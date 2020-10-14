@@ -1,5 +1,5 @@
 const router = require('express').Router();
-let User = require('../models/projectmodel');
+let newProject = require('../models/projectmodel');
 
 router.route('/').get((req, res) => {
 User.find()
@@ -10,7 +10,7 @@ User.find()
 router.route('/add').post((req, res) => {
 const username = req.body.username;
 
-const newUser = new User({username});
+const newProj = new newProject({username});
 
 newUser.save()
     .then(() => res.json('User added!'))
